@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1B2422">
+<meta name="color-scheme" content="dark">
+<title>Puff log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1B2422;
+    --surface: #232E2B;
+    --surface-2: #202A27;
+    --divider: #2A3532;
+    --text: #EDEAE2;
+    --text-secondary: #9BA69C;
+    --text-muted: #7C867F;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background: var(--bg); }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display:flex;
+    justify-content:center;
+    padding: 28px 16px 60px;
+  }
+  #app { width:100%; max-width:560px; }
+  .eyebrow { font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px; }
+  h1.title { font-family:'Fraunces', Georgia, serif; font-weight:500; font-size:26px; margin:0 0 20px; }
+  .hero-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+  .hero-card { background:var(--surface); border:1px solid; border-radius:14px; padding:16px 16px 14px; display:flex; flex-direction:column; gap:4px; }
+  .hero-head { display:flex; align-items:center; gap:6px; }
+  .hero-label { font-size:12px; font-weight:600; }
+  .hero-number { font-family:'IBM Plex Mono', monospace; font-size:26px; font-weight:500; margin-top:6px; font-variant-numeric: tabular-nums; }
+  .hero-sub { font-size:11px; color:var(--text-muted); margin-bottom:10px; }
+  .log-btn { margin-top:auto; border:none; border-radius:9px; padding:9px 0; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition: transform 0.12s ease; }
+  .log-btn:active { transform: scale(0.97); }
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px; }
+  .stat-cell { background:var(--surface-2); border-radius:10px; padding:10px 8px; text-align:center; }
+  .stat-label { font-size:10.5px; color:var(--text-muted); margin-bottom:4px; }
+  .stat-value { font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:500; }
+  .savings-card { background:var(--surface); border:1px solid rgba(192,133,82,0.33); border-radius:14px; padding:16px 16px 14px; margin-bottom:20px; }
+  .savings-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:10px; }
+  .savings-label { font-size:12px; font-weight:600; color:#E7B98A; }
+  .edit-link { font-size:11.5px; color:var(--text-secondary); text-decoration:underline; cursor:pointer; flex-shrink:0; }
+  .savings-number { font-family:'IBM Plex Mono',monospace; font-size:30px; font-weight:500; font-variant-numeric: tabular-nums; }
+  .savings-sub { font-size:11.5px; color:var(--text-muted); margin-top:4px; }
+  .savings-actions { display:flex; align-items:center; gap:10px; margin-top:12px; }
+  .savings-log-btn { flex:1; border:1px solid rgba(192,133,82,0.4); border-radius:9px; padding:9px 0; background:rgba(192,133,82,0.16); color:#E7B98A; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition: transform 0.12s ease; }
+  .savings-log-btn:active { transform: scale(0.97); }
+  .settings-panel { margin-top:14px; padding-top:14px; border-top:1px solid var(--divider); display:flex; flex-direction:column; gap:8px; }
+  .settings-row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .settings-row label { font-size:12.5px; color:var(--text-secondary); }
+  .settings-row input { width:84px; background:var(--bg); border:1px solid var(--divider); border-radius:7px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:13px; padding:6px 8px; text-align:right; }
+  .settings-row input:focus { outline:1px solid #C08552; }
+  .settings-save-btn { margin-top:4px; border:1px solid rgba(192,133,82,0.4); border-radius:9px; padding:8px 0; background:rgba(192,133,82,0.16); color:#E7B98A; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; }
+  .section-head { display:flex; align-items:center; gap:7px; margin:6px 0 8px; }
+  .section-title { font-size:13px; color:var(--text-secondary); font-weight:500; flex:1; }
+  .tab-group { display:flex; gap:6px; }
+  .tab { font-size:11.5px; padding:4px 10px; border-radius:7px; font-weight:500; cursor:pointer; transition: background 0.15s ease, color 0.15s ease; }
+  .chart-wrap { display:flex; align-items:flex-end; height:150px; gap:4px; margin-bottom:22px; }
+  .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .bar-count { font-size:9px; color:var(--text-muted); margin-bottom:3px; font-family:'IBM Plex Mono',monospace; }
+  .bar { width:100%; max-width:20px; border-radius:3px 3px 0 0; min-height:2px; }
+  .bar-label { font-size:9px; color:var(--text-muted); margin-top:4px; }
+  .empty-state { font-size:13px; color:var(--text-muted); padding:18px 0; }
+  .history-list { display:flex; flex-direction:column; margin-top:4px; margin-bottom:8px; }
+  .history-row { display:flex; align-items:center; gap:8px; padding:8px 2px; border-bottom:1px solid var(--divider); }
+  .history-substance { font-size:12.5px; font-weight:500; min-width:62px; }
+  .history-time { font-size:12px; color:var(--text-muted); flex:1; font-family:'IBM Plex Mono',monospace; }
+  .del-btn { background:transparent; border:none; color:var(--text-muted); cursor:pointer; padding:4px; display:flex; align-items:center; }
+  .del-btn:hover { color:var(--text-secondary); }
+  .footer { margin-top:18px; text-align:center; }
+  .footer-text { font-size:12px; color:var(--text-muted); }
+  .footer-link { color:var(--text-secondary); text-decoration:underline; cursor:pointer; }
+  .error-banner { margin-top:14px; font-size:12px; color:#E7B98A; background:rgba(192,133,82,0.12); border:1px solid rgba(192,133,82,0.3); border-radius:8px; padding:8px 12px; }
+  .storage-note { font-size:10.5px; color:var(--text-muted); text-align:center; margin-top:14px; }
+  @media (max-width:520px) {
+    .hero-grid { grid-template-columns:1fr; }
+    .stats-row { grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+  var STORAGE_KEY = 'puff-tracker-logs';
+  var SETTINGS_KEY = 'puff-tracker-nic-settings';
+  var PACK_LOGS_KEY = 'puff-tracker-pack-logs';
+  var DAY_MS = 86400000;
+  var SUBSTANCES = {
+    nicotine: { label:'Nicotine', accent:'#C08552', soft:'rgba(192,133,82,0.16)', dark:'#E7B98A' },
+    weed: { label:'Weed', accent:'#7C9473', soft:'rgba(124,148,115,0.18)', dark:'#AEC2A2' }
+  };
+  var DEFAULT_NIC_SETTINGS = { packPrice:21, daysPerPack:3.5 };
+
+  var storageWorks = true;
+  try {
+    var __t = '__pt_storage_test__';
+    localStorage.setItem(__t, '1');
+    storageWorks = localStorage.getItem(__t) === '1';
+    localStorage.removeItem(__t);
+  } catch (e) {
+    storageWorks = false;
+  }
+
+  function loadLogs() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function saveLogs(list) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      return true;
+    } catch (e) { return false; }
+  }
+  function loadPackLogs() {
+    try {
+      var raw = localStorage.getItem(PACK_LOGS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function savePackLogs(list) {
+    try {
+      localStorage.setItem(PACK_LOGS_KEY, JSON.stringify(list));
+      return true;
+    } catch (e) { return false; }
+  }
+  function loadSettings() {
+    try {
+      var raw = localStorage.getItem(SETTINGS_KEY);
+      return raw ? JSON.parse(raw) : DEFAULT_NIC_SETTINGS;
+    } catch (e) { return DEFAULT_NIC_SETTINGS; }
+  }
+  function persistSettings(s) {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  var logs = loadLogs();
+  var packLogs = loadPackLogs();
+  var nicSettings = loadSettings();
+  var chartSubstance = 'nicotine';
+  var confirmClear = false;
+  var settingsOpen = false;
+  var saveError = false;
+
+  function fmtDuration(ms) {
+    if (ms == null || ms < 0) return '\u2014';
+    var s = Math.floor(ms/1000);
+    var days = Math.floor(s/86400);
+    var hours = Math.floor((s%86400)/3600);
+    var mins = Math.floor((s%3600)/60);
+    var secs = s%60;
+    if (days>0) return days+'d '+hours+'h';
+    if (hours>0) return hours+'h '+mins+'m';
+    if (mins>0) return mins+'m '+secs+'s';
+    return secs+'s';
+  }
+  function fmtMoney(n) {
+    var sign = n<0 ? '-' : '';
+    return sign+'$'+Math.abs(n).toFixed(2);
+  }
+  function startOfDay(ts) {
+    var d = new Date(ts);
+    d.setHours(0,0,0,0);
+    return d.getTime();
+  }
+  function dayLabel(ts) {
+    return new Date(ts).toLocaleDateString(undefined,{weekday:'narrow'});
+  }
+  function relTime(ts) {
+    var diff = Date.now()-ts;
+    if (diff<60000) return 'just now';
+    return fmtDuration(diff)+' ago';
+  }
+
+  function maybeRender() {
+    if (!settingsOpen) render();
+  }
+
+  function addLog(substance) {
+    logs.push({ id: Date.now()+'-'+Math.random().toString(36).slice(2,8), substance: substance, ts: Date.now() });
+    saveError = !saveLogs(logs);
+    maybeRender();
+  }
+  function deleteLog(id) {
+    logs = logs.filter(function(l){ return l.id !== id; });
+    saveError = !saveLogs(logs);
+    maybeRender();
+  }
+  function logPackPurchase() {
+    packLogs.push({ id: Date.now()+'-'+Math.random().toString(36).slice(2,8), ts: Date.now() });
+    saveError = !savePackLogs(packLogs);
+    maybeRender();
+  }
+  function undoLastPack() {
+    if (packLogs.length === 0) return;
+    var sorted = packLogs.slice().sort(function(a,b){return a.ts-b.ts;});
+    var lastId = sorted[sorted.length-1].id;
+    packLogs = packLogs.filter(function(p){ return p.id !== lastId; });
+    saveError = !savePackLogs(packLogs);
+    maybeRender();
+  }
+  function selectChartSubstance(key) {
+    chartSubstance = key;
+    maybeRender();
+  }
+  function requestClear() {
+    confirmClear = true;
+    maybeRender();
+  }
+  function cancelClear() {
+    confirmClear = false;
+    maybeRender();
+  }
+  function doClearAll() {
+    logs = [];
+    saveError = !saveLogs(logs);
+    confirmClear = false;
+    maybeRender();
+  }
+  function toggleSettings() {
+    settingsOpen = !settingsOpen;
+    render();
+  }
+  function saveSettings() {
+    var packPrice = Math.max(0, parseFloat(document.getElementById('set-packPrice').value) || 0);
+    var daysPerPack = Math.max(0.1, parseFloat(document.getElementById('set-daysPerPack').value) || 1);
+    nicSettings = { packPrice:packPrice, daysPerPack:daysPerPack };
+    persistSettings(nicSettings);
+    settingsOpen = false;
+    render();
+  }
+
+  function computeStats(now) {
+    var todayStart = startOfDay(now);
+    var out = {};
+    Object.keys(SUBSTANCES).forEach(function(key){
+      var subLogs = logs.filter(function(l){return l.substance===key;}).sort(function(a,b){return b.ts-a.ts;});
+      var lastTs = subLogs.length ? subLogs[0].ts : null;
+      var todayCount = subLogs.filter(function(l){return l.ts>=todayStart;}).length;
+      var last7 = subLogs.filter(function(l){return l.ts>=now-7*DAY_MS;}).length;
+      out[key] = { lastTs:lastTs, todayCount:todayCount, weekAvg:(last7/7).toFixed(1) };
+    });
+    return out;
+  }
+  function computeNicotineSavings(now) {
+    if (packLogs.length === 0) return null;
+    var sorted = packLogs.slice().sort(function(a,b){return a.ts-b.ts;});
+    var startTs = sorted[0].ts;
+    var lastTs = sorted[sorted.length-1].ts;
+    var daysSinceStart = Math.max((now-startTs)/DAY_MS, 0.0001);
+    var baselineCostPerDay = nicSettings.packPrice / nicSettings.daysPerPack;
+    var actualCost = packLogs.length * nicSettings.packPrice;
+    var expectedCost = daysSinceStart * baselineCostPerDay;
+    return { saved: expectedCost-actualCost, startTs: startTs, lastTs: lastTs, packsLogged: packLogs.length };
+  }
+  function computeChartData(now) {
+    var days = [];
+    for (var i=13;i>=0;i--) {
+      var dayStart = startOfDay(now) - i*DAY_MS;
+      days.push({ dayStart:dayStart, label: dayLabel(dayStart), count:0, isToday: i===0 });
+    }
+    var map = {};
+    days.forEach(function(d){ map[d.dayStart]=d; });
+    logs.forEach(function(l){
+      if (l.substance !== chartSubstance) return;
+      var bucket = map[startOfDay(l.ts)];
+      if (bucket) bucket.count++;
+    });
+    return days;
+  }
+
+  function iconSvg(pathHtml, color, size) {
+    size = size || 16;
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+pathHtml+'</svg>';
+  }
+  var WIND_PATH = '<path d="M3 8h13a3 3 0 1 0-2-5.2"/><path d="M3 13h17a3 3 0 1 1-2 5.2"/>';
+  var LEAF_PATH = '<path d="M12 3C7 3 4 8 4 13c0 4 3 7 8 7s8-3 8-7c0-5-3-10-8-10Z"/><path d="M12 20V10"/>';
+  var X_PATH = '<path d="M18 6 6 18"/><path d="M6 6l12 12"/>';
+
+  function render() {
+    var now = Date.now();
+    var stats = computeStats(now);
+    var nicSavings = computeNicotineSavings(now);
+    var chartData = computeChartData(now);
+    var maxCount = 1;
+    chartData.forEach(function(d){ if(d.count>maxCount) maxCount=d.count; });
+    var history = logs.slice().sort(function(a,b){return b.ts-a.ts;}).slice(0,25);
+
+    var heroHtml = Object.keys(SUBSTANCES).map(function(key){
+      var cfg = SUBSTANCES[key];
+      var s = stats[key];
+      var icon = iconSvg(key==='nicotine'?WIND_PATH:LEAF_PATH, cfg.accent, 16);
+      var lastStr = s.lastTs ? fmtDuration(now-s.lastTs) : '\u2014';
+      var subStr = s.lastTs ? ('since '+new Date(s.lastTs).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})) : 'no entries yet';
+      return ''+
+        '<div class="hero-card" style="border-color:'+cfg.accent+'55">'+
+          '<div class="hero-head">'+icon+'<span class="hero-label" style="color:'+cfg.accent+'">'+cfg.label+'</span></div>'+
+          '<div class="hero-number">'+lastStr+'</div>'+
+          '<div class="hero-sub">'+subStr+'</div>'+
+          '<button class="log-btn" style="background:'+cfg.soft+';color:'+cfg.dark+';border:1px solid '+cfg.accent+'66" onclick="addLog(\''+key+'\')">Log '+cfg.label.toLowerCase()+'</button>'+
+        '</div>';
+    }).join('');
+
+    var statsHtml = Object.keys(SUBSTANCES).map(function(key){
+      var cfg = SUBSTANCES[key];
+      var s = stats[key];
+      return ''+
+        '<div class="stat-cell"><div class="stat-label">'+cfg.label+' today</div><div class="stat-value" style="color:'+cfg.dark+'">'+s.todayCount+'</div></div>'+
+        '<div class="stat-cell"><div class="stat-label">'+cfg.label+' 7-day avg</div><div class="stat-value" style="color:'+cfg.dark+'">'+s.weekAvg+'/day</div></div>';
+    }).join('');
+
+    var savingsBodyHtml;
+    if (nicSavings) {
+      savingsBodyHtml = ''+
+        '<div class="savings-number">'+fmtMoney(nicSavings.saved)+'</div>'+
+        '<div class="savings-sub">vs your usual $'+nicSettings.packPrice+'/'+nicSettings.daysPerPack+'d pace, since '+new Date(nicSavings.startTs).toLocaleDateString()+'</div>'+
+        '<div class="savings-sub">'+nicSavings.packsLogged+' pack'+(nicSavings.packsLogged===1?'':'s')+' logged \u00b7 last bought '+relTime(nicSavings.lastTs)+'</div>';
+    } else {
+      savingsBodyHtml = '<div class="savings-sub">Log your next pack purchase below to start tracking savings.</div>';
+    }
+    var undoLinkHtml = packLogs.length>0 ? '<span class="edit-link" onclick="undoLastPack()">Undo last</span>' : '';
+    var savingsActionsHtml = '<div class="savings-actions"><button class="savings-log-btn" onclick="logPackPurchase()">Log pack purchase</button>'+undoLinkHtml+'</div>';
+
+    var settingsPanelHtml = '';
+    if (settingsOpen) {
+      settingsPanelHtml = ''+
+        '<div class="settings-panel">'+
+          '<div class="settings-row"><label>Pack price ($)</label><input id="set-packPrice" type="number" step="0.01" value="'+nicSettings.packPrice+'"></div>'+
+          '<div class="settings-row"><label>Days a pack lasts you</label><input id="set-daysPerPack" type="number" step="0.5" value="'+nicSettings.daysPerPack+'"></div>'+
+          '<button class="settings-save-btn" onclick="saveSettings()">Save</button>'+
+        '</div>';
+    }
+    var savingsHtml = ''+
+      '<div class="savings-card">'+
+        '<div class="savings-head">'+
+          '<span class="savings-label"><span style="color:#E7B98A;font-weight:600;">$</span> Money saved on nicotine</span>'+
+          '<span class="edit-link" onclick="toggleSettings()">'+(settingsOpen?'Close':'Edit assumptions')+'</span>'+
+        '</div>'+
+        savingsBodyHtml+
+        savingsActionsHtml+
+        settingsPanelHtml+
+      '</div>';
+
+    var tabsHtml = Object.keys(SUBSTANCES).map(function(key){
+      var cfg = SUBSTANCES[key];
+      var active = chartSubstance===key;
+      var bg = active ? cfg.soft : 'transparent';
+      var color = active ? cfg.dark : 'var(--text-secondary)';
+      var border = active ? ('1px solid '+cfg.accent+'66') : '1px solid transparent';
+      return '<div class="tab" style="background:'+bg+';color:'+color+';border:'+border+'" onclick="selectChartSubstance(\''+key+'\')">'+cfg.label+'</div>';
+    }).join('');
+
+    var chartAccent = SUBSTANCES[chartSubstance].accent;
+    var barsHtml = chartData.map(function(d){
+      var pct = Math.round((d.count/maxCount)*100);
+      var opacity = d.isToday ? '1' : '0.55';
+      var countLabel = d.count>0 ? ('<div class="bar-count">'+d.count+'</div>') : '';
+      return ''+
+        '<div class="bar-col">'+
+          countLabel+
+          '<div class="bar" style="height:'+pct+'%;background:'+chartAccent+';opacity:'+opacity+'"></div>'+
+          '<div class="bar-label">'+d.label+'</div>'+
+        '</div>';
+    }).join('');
+
+    var historyHtml;
+    if (history.length===0) {
+      historyHtml = '<div class="empty-state">Nothing logged yet \u2014 tap a button above when you use.</div>';
+    } else {
+      historyHtml = '<div class="history-list">'+history.map(function(l){
+        var cfg = SUBSTANCES[l.substance];
+        var icon = iconSvg(l.substance==='nicotine'?WIND_PATH:LEAF_PATH, cfg.accent, 14);
+        return ''+
+          '<div class="history-row">'+
+            icon+
+            '<span class="history-substance" style="color:'+cfg.dark+'">'+cfg.label+'</span>'+
+            '<span class="history-time">'+relTime(l.ts)+'</span>'+
+            '<button class="del-btn" aria-label="Delete entry" onclick="deleteLog(\''+l.id+'\')">'+iconSvg(X_PATH,'currentColor',13)+'</button>'+
+          '</div>';
+      }).join('')+'</div>';
+    }
+
+    var footerHtml;
+    if (confirmClear) {
+      footerHtml = '<span class="footer-text">Clear all '+logs.length+' entries? <span class="footer-link" onclick="doClearAll()">Yes, clear</span> \u00b7 <span class="footer-link" onclick="cancelClear()">Cancel</span></span>';
+    } else if (logs.length>0) {
+      footerHtml = '<span class="footer-link" onclick="requestClear()">Clear all entries</span>';
+    } else {
+      footerHtml = '';
+    }
+
+    var errorHtml = saveError ? '<div class="error-banner">Couldn\u2019t save \u2014 your browser may be blocking storage (e.g. private/incognito mode), so entries won\u2019t persist after this tab closes.</div>' : '';
+    var storageWarningHtml = !storageWorks ? '<div class="error-banner" style="margin-top:0;margin-bottom:16px;">This page can\u2019t save anything right now \u2014 you\u2019re likely viewing it inside Claude\u2019s chat preview, which blocks browser storage. Open the downloaded file or hosted link directly in your own browser (not through Claude) and it\u2019ll save normally.</div>' : '';
+
+    document.getElementById('app').innerHTML = ''+
+      storageWarningHtml+
+      '<div class="eyebrow">puff log</div>'+
+      '<h1 class="title">Time since last</h1>'+
+      '<div class="hero-grid">'+heroHtml+'</div>'+
+      '<div class="stats-row">'+statsHtml+'</div>'+
+      savingsHtml+
+      '<div class="section-head"><span class="section-title">Last 14 days</span><div class="tab-group">'+tabsHtml+'</div></div>'+
+      '<div class="chart-wrap">'+barsHtml+'</div>'+
+      '<div class="section-head"><span class="section-title">Recent entries</span></div>'+
+      historyHtml+
+      '<div class="footer">'+footerHtml+'</div>'+
+      errorHtml+
+      '<div class="storage-note">Saved in this browser only \u2014 no account, no sync.</div>';
+  }
+
+  render();
+  setInterval(maybeRender, 1000);
+</script>
+</body>
+</html>
